@@ -9,26 +9,29 @@ import (
 )
 
 func main() {
-	var ctx = context.Background()
+	ctx := context.Background()
 
-	redisChan := os.Getenv("REDIS_CHANNEL")
-	redisPassword := os.Getenv("REDIS_PASSWORD")
+	redisHost := os.Getenv("MY_REDIS_MASTER_MASTER_SERVICE_HOST")
+	redisChan := "channel"
+	redisPassword := "password"
+
+	fmt.Println("env vars", redisChan, redisPassword, redisHost)
 
 	rdb := redis.NewClient(
 		&redis.Options{
-			Addr:     "localhost:6379",
+			Addr:     redisHost + ":6379",
 			Password: redisPassword,
 		},
 	)
 
-	fmt.Println(rdb.Ping(ctx).Result())
+	_, err := rdb.Ping(ctx).Result()
+
+	fmt.Println("ping", err)
 
 	pubSub := rdb.Subscribe(ctx, redisChan)
 
 	pubSub.Receive(ctx)
 	for ev := range pubSub.Channel() {
-		switch ev {
-
-		}
+		fmt.Println(ev.String())
 	}
 }
