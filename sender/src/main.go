@@ -2,28 +2,17 @@ package main
 
 import (
 	"context"
-	"fmt"
-	"os"
-
-	"github.com/redis/go-redis/v9"
+	"sender/internal/setup"
 )
 
 func main() {
 	ctx := context.Background()
+	rdb, err := setup.SetupRedis(ctx)
 
-	redisChan := os.Getenv("REDIS_CHANNEL")
-	redisPassword := os.Getenv("REDIS_PASSWORD")
+	if err != nil {
+		panic(err)
+	}
 
-	rdb := redis.NewClient(
-		&redis.Options{
-			Addr:     "localhost:6379",
-			Password: redisPassword,
-		},
-	)
-
-	fmt.Println(rdb.Ping(ctx).Result())
-	err := rdb.Publish(ctx, redisChan, "msg").Err()
-
-	fmt.Println(err)
+	rdb.Publish(ctx, "Success")
 
 }

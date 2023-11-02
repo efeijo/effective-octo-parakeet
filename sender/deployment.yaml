@@ -14,6 +14,7 @@ spec:
       containers:
       - name: sender
         image: emanuelfeijo/redis-pub-sender:latest
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             memory: "128Mi"
