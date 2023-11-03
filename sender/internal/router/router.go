@@ -2,41 +2,71 @@ package router
 
 import (
 	"encoding/json"
-	"net/http"
 	"sender/internal/model"
 	"sender/internal/sender"
 
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
+	"go.uber.org/zap"
 )
 
 type Router struct {
 	*chi.Mux
-	sender *sender.Sender
+	sender sender.Sender
+	logger *zap.SugaredLogger
 }
 
-func NewRouter(sender *sender.Sender) http.Handler {
+func NewRouter(sender sender.Sender, logger *zap.SugaredLogger) http.Handler {
 	chiRouter := chi.NewRouter()
 	router := &Router{
 		sender: sender,
+		Mux:    chiRouter,
+		logger: logger,
 	}
-	router.Mux = chiRouter
 
-	chiRouter.Use(middleware.Logger)
-	chiRouter.Route("/send", func(r chi.Router) {
-		r.Post("/", router.Send)
-		r.Get("/", router.GetAllSended)
-	})
+	// setupRoutes
+	routes(router)
 
 	return router
 }
 
 func (r *Router) Send(w http.ResponseWriter, req *http.Request) {
-	var message model.Message
+	logger := r.logger
+	var message *model.Message
 	err := json.NewDecoder(req.Body).Decode(&message)
 	if err != nil {
+		logger.Errorln("error unmarshalling body", err)
+
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
+	logger.Infoln("message to send", message)
+
+	err = r.sender.Publish(req.Context(), message, r.logger)
+	if err != nil {
+		logger.Errorln("error publishing message", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
-func (r *Router) GetAllSended(w http.ResponseWriter, req *http.Request) {}
+func (r *Router) GetAllMessagesSended(w http.ResponseWriter, req *http.Request) {
+	logger := r.logger
+	messages, err := r.sender.GetAllPublished(req.Context(), r.logger)
+	if err != nil {
+		logger.Errorln("error getting all messages", err)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	marshMessages, err := json.Marshal(messages)
+	if err != nil {
+		logger.Errorln("error unmarshalling messages", req)
+
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	w.Write(marshMessages)
+}

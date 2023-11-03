@@ -1,8 +1,15 @@
 package model
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+)
 
 type Message struct {
-	Id          uuid.UUID `json:"id"`
-	MessageText string    `json:"text"`
+	Id          string `json:"id"`
+	MessageText string `json:"text"`
+}
+
+// MarshalBibnary to implement encoding.BinaryMarshaler need for redis
+func (m *Message) MarshalBinary() (data []byte, err error) {
+	return json.Marshal(m)
 }

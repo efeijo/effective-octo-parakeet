@@ -11,7 +11,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	redisHost := os.Getenv("MY_REDIS_MASTER_MASTER_SERVICE_HOST")
+	redisHost := os.Getenv("MY_REDIS_MASTER_SERVICE_HOST")
 	redisChan := "channel"
 	redisPassword := "password"
 

@@ -14,7 +14,7 @@ build-dockerfile-receiver:
 	docker build -t emanuelfeijo/redis-pub-receiver:${DOCKER_TAG} ./receiver 
 	docker push ${DOCKER_REGISTRY}/redis-pub-receiver
 
-build-dockers-locally: minikube-local-registry build-dockerfile-sender-locally build-dockerfile-receiver-locally
+build-dockers-locally: build-dockerfile-sender-locally build-dockerfile-receiver-locally
 
 build-dockerfile-sender-locally:
 	docker build -t  emanuelfeijo/redis-pub-sender:${DOCKER_TAG} ./sender
@@ -56,4 +56,4 @@ delete-k8s-deps:
 	docker images prune
 
 delete-all: delete-redis delete-k8s-deps 
-	minikub stop
+	minikube stop
